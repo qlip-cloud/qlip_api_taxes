@@ -1,6 +1,6 @@
 import frappe
 
-from qlip_api_taxes.qlip_api_taxes.resources.api.response import handle as response
+from qlip_api_taxes.resources.api.response import handle as response
 from qlip_api_taxes.qlip_api_taxes.uses_cases.load_taxes_dt import handle as load_taxes
 
 
