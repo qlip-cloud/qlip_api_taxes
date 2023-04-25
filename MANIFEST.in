@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include qlip_api_taxes *.css
+recursive-include qlip_api_taxes *.csv
+recursive-include qlip_api_taxes *.html
+recursive-include qlip_api_taxes *.ico
+recursive-include qlip_api_taxes *.js
+recursive-include qlip_api_taxes *.json
+recursive-include qlip_api_taxes *.md
+recursive-include qlip_api_taxes *.png
+recursive-include qlip_api_taxes *.py
+recursive-include qlip_api_taxes *.svg
+recursive-include qlip_api_taxes *.txt
+recursive-exclude qlip_api_taxes *.pyc
