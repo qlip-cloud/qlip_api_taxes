@@ -1,5 +1,6 @@
 import frappe
 import traceback
+from frappe import _
 
 def handle(callback, origin, error_msg):
     
