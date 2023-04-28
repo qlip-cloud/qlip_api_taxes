@@ -2,6 +2,8 @@ import frappe
 from erpnext.controllers.accounts_controller import get_taxes_and_charges, add_taxes_from_tax_template
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_reference_details
 
+from erpnext.stock.get_item_details import get_item_tax_info
+
 
 def handle(upd_dt, doc_name):
 
@@ -31,13 +33,29 @@ def set_taxes_sales_invoice(upd_dt, doc_name):
 
     elif not dt_obj.get('taxes_and_charges') and not dt_obj.get('taxes'):
 
+        item_codes = []
+        item_rates = {}
+
         for item in dt_obj.items:
 
-            if item.name:
+            if item.item_code:
+                item_codes.append([item.item_code, item.name])
+                item_rates[item.name] = item.net_rate
 
-                add_taxes_from_tax_template(item, dt_obj)
+        if len(item_codes):
 
-        dt_obj.calculate_taxes_and_totals()
+            res_out = get_item_tax_info(dt_obj.company, dt_obj.tax_category, item_codes, item_rates)
+
+            for item in dt_obj.items:
+
+                if item.name:
+                    item.item_tax_template = res_out[item.name].get('item_tax_template')
+                    item.item_tax_rate = res_out[item.name].get('item_tax_rate')
+                    # add_taxes_from_item_tax_template(item.item_tax_rate) # Se ejecuta el método que sigue
+                    add_taxes_from_tax_template(item, dt_obj)
+                else:
+                    item.item_tax_template = ""
+                    item.item_tax_rate = ""
 
         dt_obj.save()
 
