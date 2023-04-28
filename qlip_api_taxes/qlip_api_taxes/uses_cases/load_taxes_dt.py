@@ -1,5 +1,6 @@
 import frappe
 from erpnext.controllers.accounts_controller import get_taxes_and_charges
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_reference_details
 
 
 def handle(upd_dt, doc_name):
@@ -37,6 +38,12 @@ def set_taxes_payment_entry(upd_dt, doc_name):
 
     dt_obj = frappe.get_doc(upd_dt, doc_name)
 
+    # Respaldar referencias para luego cargarlas tomando en cuenta los impuestos
+    ref_aux = dt_obj.get("references")
+    dt_obj.references = []
+
+    # Proceder a Calcular los impuestos
+
     if dt_obj.party_type == 'Supplier':
 
         master_doctype = 'Purchase Taxes and Charges Template'
@@ -68,5 +75,21 @@ def set_taxes_payment_entry(upd_dt, doc_name):
     dt_obj.apply_taxes()
 
     dt_obj.set_amounts()
+
+    # Restaurar líneas de la referencia
+
+    for item_ref in ref_aux:
+
+        ref_details = get_reference_details(item_ref.reference_doctype,
+            item_ref.reference_name, dt_obj.party_account_currency)
+
+        if dt_obj.unallocated_amount > item_ref.outstanding_amount:
+            allocated_amount = item_ref.outstanding_amount
+        else:
+            allocated_amount = dt_obj.unallocated_amount
+
+        item_ref.allocated_amount = allocated_amount
+
+        dt_obj.append("references", item_ref)
 
     dt_obj.save()
