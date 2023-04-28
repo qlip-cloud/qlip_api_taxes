@@ -1,5 +1,5 @@
 import frappe
-from erpnext.controllers.accounts_controller import get_taxes_and_charges
+from erpnext.controllers.accounts_controller import get_taxes_and_charges, add_taxes_from_tax_template
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_reference_details
 
 
@@ -14,7 +14,6 @@ def handle(upd_dt, doc_name):
         set_taxes_payment_entry(upd_dt, doc_name)
         
 
-
 def set_taxes_sales_invoice(upd_dt, doc_name):
 
     dt_obj = frappe.get_doc(upd_dt, doc_name)
@@ -25,6 +24,18 @@ def set_taxes_sales_invoice(upd_dt, doc_name):
 
         for tax in taxes:
             dt_obj.append('taxes', tax)
+
+        dt_obj.calculate_taxes_and_totals()
+
+        dt_obj.save()
+
+    elif not dt_obj.get('taxes_and_charges') and not dt_obj.get('taxes'):
+
+        for item in dt_obj.items:
+
+            if item.name:
+
+                add_taxes_from_tax_template(item, dt_obj)
 
         dt_obj.calculate_taxes_and_totals()
 
