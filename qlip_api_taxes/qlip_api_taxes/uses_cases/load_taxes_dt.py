@@ -63,6 +63,7 @@ def set_taxes_sales_invoice(upd_dt, doc_name):
         dt_obj.save()
 
 
+# Se incorpora metodo ejecuado en JS
 def add_taxes_from_item_tax_template(child_item, parent_doc):
 	add_taxes_from_item_tax_template = frappe.db.get_single_value("Accounts Settings", "add_taxes_from_item_tax_template")
 
