@@ -1,6 +1,9 @@
 import frappe
-from erpnext.controllers.accounts_controller import get_taxes_and_charges, add_taxes_from_tax_template
+from erpnext.controllers.accounts_controller import get_taxes_and_charges
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_reference_details
+
+import json
+from frappe.utils import flt
 
 from erpnext.stock.get_item_details import get_item_tax_info
 
@@ -52,12 +55,34 @@ def set_taxes_sales_invoice(upd_dt, doc_name):
                     item.item_tax_template = res_out[item.name].get('item_tax_template')
                     item.item_tax_rate = res_out[item.name].get('item_tax_rate')
                     # add_taxes_from_item_tax_template(item.item_tax_rate) # Se ejecuta el método que sigue
-                    add_taxes_from_tax_template(item, dt_obj)
+                    add_taxes_from_item_tax_template(item, dt_obj)
                 else:
                     item.item_tax_template = ""
                     item.item_tax_rate = ""
 
         dt_obj.save()
+
+
+# Se incorpora metodo ejecuado en JS
+def add_taxes_from_item_tax_template(child_item, parent_doc):
+	add_taxes_from_item_tax_template = frappe.db.get_single_value("Accounts Settings", "add_taxes_from_item_tax_template")
+
+	if child_item.get("item_tax_rate") and add_taxes_from_item_tax_template:
+		tax_map = json.loads(child_item.get("item_tax_rate"))
+		for tax_type in tax_map:
+			tax_rate = flt(tax_map[tax_type])
+			taxes = parent_doc.get('taxes') or []
+			# add new row for tax head only if missing
+			found = any(tax.account_head == tax_type for tax in taxes)
+			if not found:
+				tax_row = parent_doc.append("taxes", {})
+				tax_row.update({
+					"description" : str(tax_type).split(' - ')[0],
+					"charge_type" : "On Net Total",
+					"account_head" : tax_type,
+					"rate" : 0
+				})
+				tax_row.db_insert()
 
 
 def set_taxes_payment_entry(upd_dt, doc_name):
